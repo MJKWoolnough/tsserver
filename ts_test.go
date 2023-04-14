@@ -45,7 +45,7 @@ func TestWrap(t *testing.T) {
 			"const a = 1;\n\nconsole.log(a);",
 		},
 	} {
-		f, err := WrapFileSystem(pseudoFS(test.Input)).Open("a.js")
+		f, err := WrapFS(pseudoFS(test.Input)).Open("a.js")
 		if err != nil {
 			t.Errorf("test %d: unexpected error while getting file: %s", n+1, err)
 		} else if b, _ := io.ReadAll(f); string(b) != test.Output {

@@ -20,7 +20,7 @@ type wrapped struct {
 	fs.FS
 }
 
-func WrapFileSystem(f fs.FS) fs.FS {
+func WrapFS(f fs.FS) fs.FS {
 	return &wrapped{FS: f}
 }
 
