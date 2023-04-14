@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"strings"
 
 	"vimagination.zapto.org/javascript"
@@ -18,16 +17,16 @@ const (
 )
 
 type wrapped struct {
-	http.FileSystem
+	fs.FS
 }
 
-func WrapFileSystem(fs http.FileSystem) http.FileSystem {
-	return &wrapped{FileSystem: fs}
+func WrapFileSystem(f fs.FS) fs.FS {
+	return &wrapped{FS: f}
 }
 
-func (w *wrapped) Open(name string) (http.File, error) {
+func (w *wrapped) Open(name string) (fs.File, error) {
 	if strings.HasSuffix(name, jsExt) {
-		if tsf, err := w.FileSystem.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
+		if tsf, err := w.FS.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
 			if stat, err := tsf.Stat(); err == nil {
 				tk := parser.NewReaderTokeniser(tsf)
 				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
@@ -43,7 +42,7 @@ func (w *wrapped) Open(name string) (http.File, error) {
 			}
 		}
 	}
-	return w.FileSystem.Open(name)
+	return w.FS.Open(name)
 }
 
 type file struct {
