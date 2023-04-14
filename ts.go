@@ -26,8 +26,7 @@ func WrapFileSystem(fs http.FileSystem) http.FileSystem {
 }
 
 func (w *wrapped) Open(name string) (http.File, error) {
-	f, err := w.FileSystem.Open(name)
-	if err != nil && strings.HasSuffix(name, jsExt) {
+	if strings.HasSuffix(name, jsExt) {
 		if tsf, err := w.FileSystem.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
 			if stat, err := tsf.Stat(); err == nil {
 				tk := parser.NewReaderTokeniser(tsf)
@@ -44,7 +43,7 @@ func (w *wrapped) Open(name string) (http.File, error) {
 			}
 		}
 	}
-	return f, err
+	return w.FileSystem.Open(name)
 }
 
 type file struct {
