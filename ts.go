@@ -28,10 +28,8 @@ func WrapFileSystem(fs http.FileSystem) http.FileSystem {
 func (w *wrapped) Open(name string) (http.File, error) {
 	f, err := w.FileSystem.Open(name)
 	if err != nil && strings.HasSuffix(name, jsExt) {
-		tsf, err := w.FileSystem.Open(strings.TrimSuffix(name, jsExt) + tsExt)
-		if err == nil {
-			stat, err := tsf.Stat()
-			if err == nil {
+		if tsf, err := w.FileSystem.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
+			if stat, err := tsf.Stat(); err == nil {
 				tk := parser.NewReaderTokeniser(tsf)
 				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
 				if err == nil {
