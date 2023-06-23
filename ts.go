@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"vimagination.zapto.org/javascript"
-	"vimagination.zapto.org/memio"
 	"vimagination.zapto.org/parser"
 )
 
@@ -40,10 +39,10 @@ func (w *wrapped) Open(name string) (fs.File, error) {
 				tk := parser.NewReaderTokeniser(tsf)
 				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
 				if err == nil {
-					var buf memio.Buffer
+					var buf bytes.Buffer
 					fmt.Fprintf(&buf, "%s", m)
 					return &file{
-						Reader:   bytes.NewReader(buf),
+						Reader:   bytes.NewReader(buf.Bytes()),
 						name:     name,
 						FileInfo: stat,
 					}, nil
