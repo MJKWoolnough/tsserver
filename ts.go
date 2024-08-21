@@ -1,5 +1,5 @@
 // Package tsserver implements a simple wrapper around fs.FS to intercept calls
-// to open Javascript files, and instead open their Typescript equivelants and
+// to open Javascript files, and instead open their Typescript equivalents and
 // generate the Javascript.
 package tsserver // import "vimagination.zapto.org/tsserver"
 
