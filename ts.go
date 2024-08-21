@@ -37,10 +37,13 @@ func (w *wrapped) Open(name string) (fs.File, error) {
 		if tsf, err := w.FS.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
 			if stat, err := tsf.Stat(); err == nil {
 				tk := parser.NewReaderTokeniser(tsf)
+
 				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
 				if err == nil {
 					var buf bytes.Buffer
+
 					fmt.Fprintf(&buf, "%s", m)
+
 					return &file{
 						Reader:   bytes.NewReader(buf.Bytes()),
 						name:     name,
@@ -50,6 +53,7 @@ func (w *wrapped) Open(name string) (fs.File, error) {
 			}
 		}
 	}
+
 	return w.FS.Open(name)
 }
 
