@@ -1,7 +1,9 @@
 module vimagination.zapto.org/tsserver
 
-go 1.20
+go 1.23
 
-require vimagination.zapto.org/javascript v1.4.15
+toolchain go1.23.3
 
-require vimagination.zapto.org/parser v1.0.2
+require vimagination.zapto.org/javascript v1.4.16
+
+require vimagination.zapto.org/parser v1.0.4
