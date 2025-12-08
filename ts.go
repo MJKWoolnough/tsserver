@@ -5,7 +5,6 @@ package tsserver // import "vimagination.zapto.org/tsserver"
 
 import (
 	"bytes"
-	"fmt"
 	"io/fs"
 	"strings"
 
@@ -42,7 +41,26 @@ func (w *wrapped) Open(name string) (fs.File, error) {
 				if err == nil {
 					var buf bytes.Buffer
 
-					fmt.Fprintf(&buf, "%s", m)
+					inTS := false
+
+					for _, tk := range m.Tokens {
+						if tk.IsTypescript() {
+							if !inTS {
+								inTS = true
+
+								buf.WriteString("/*")
+							}
+
+							buf.WriteString(strings.ReplaceAll(tk.Data, "*/", "* /"))
+
+							continue
+						} else if inTS {
+							buf.WriteString("*/")
+							inTS = false
+						}
+
+						buf.WriteString(tk.Data)
+					}
 
 					return &file{
 						Reader:   bytes.NewReader(buf.Bytes()),
