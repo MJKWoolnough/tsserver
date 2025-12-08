@@ -56,9 +56,7 @@ func Example() {
 	io.Copy(os.Stdout, file)
 
 	// Output:
-	// function hello(name) {
-	//	console.log('Hello ' + name);
-	// }
+	// function hello(name/*: string*/) {console.log('Hello ' + name);}
 	//
 	// hello('Bob');
 }
