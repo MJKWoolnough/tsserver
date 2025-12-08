@@ -42,7 +42,7 @@ func TestWrap(t *testing.T) {
 		},
 		{
 			"const a: number = 1;\n\nconsole.log(a);",
-			"const a = 1;\n\nconsole.log(a);",
+			"const a/*: number*/ = 1;\n\nconsole.log(a);",
 		},
 	} {
 		f, err := WrapFS(pseudoFS(test.Input)).Open("a.js")
