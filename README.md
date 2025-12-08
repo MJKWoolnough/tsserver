@@ -7,7 +7,7 @@
 --
     import "vimagination.zapto.org/tsserver"
 
-Package tsserver implements a simple wrapper around fs.FS to intercept calls to open Javascript files, and instead open their Typescript equivalents and generate the Javascript.
+Package tsserver implements a simple wrapper around fs.FS to intercept calls to open Javascript files, and instead open their Typescript equivalents and generate the Javascript, commenting out any typescipt parts.
 
 ## Highlights
 
@@ -75,9 +75,7 @@ func main() {
 	io.Copy(os.Stdout, file)
 
 	// Output:
-	// function hello(name) {
-	//	console.log('Hello ' + name);
-	// }
+	// function hello(name/*: string*/) {console.log('Hello ' + name);}
 	//
 	// hello('Bob');
 }
