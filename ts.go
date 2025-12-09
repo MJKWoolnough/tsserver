@@ -5,6 +5,7 @@ package tsserver // import "vimagination.zapto.org/tsserver"
 
 import (
 	"bytes"
+	"io"
 	"io/fs"
 	"strings"
 
@@ -19,6 +20,7 @@ const (
 
 type wrapped struct {
 	fs.FS
+	errFn func(w io.Writer, err error)
 }
 
 // WrapFS takes a fs.FS and intercepts any calls to open .js files, and instead
@@ -29,6 +31,10 @@ type wrapped struct {
 // intercepted.
 func WrapFS(f fs.FS) fs.FS {
 	return &wrapped{FS: f}
+}
+
+func WrapFSWithErrorHandler(f fs.FS, errFn func(w io.Writer, err error)) fs.FS {
+	return &wrapped{FS: f, errFn: errFn}
 }
 
 func (w *wrapped) Open(name string) (fs.File, error) {
@@ -61,6 +67,16 @@ func (w *wrapped) Open(name string) (fs.File, error) {
 
 						buf.WriteString(tk.Data)
 					}
+
+					return &file{
+						Reader:   bytes.NewReader(buf.Bytes()),
+						name:     name,
+						FileInfo: stat,
+					}, nil
+				} else if w.errFn != nil {
+					var buf bytes.Buffer
+
+					w.errFn(&buf, err)
 
 					return &file{
 						Reader:   bytes.NewReader(buf.Bytes()),
