@@ -13,6 +13,7 @@ Package tsserver implements a simple wrapper around fs.FS to intercept calls to 
 
  - Wrap any `fs.FS` implementation.
  - Automatically transpiles Typescript files to Javascript.
+ - Customisable error output.
 
 ## Usage
 
