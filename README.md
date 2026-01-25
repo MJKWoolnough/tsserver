@@ -7,12 +7,12 @@
 --
     import "vimagination.zapto.org/tsserver"
 
-Package tsserver implements a simple wrapper around fs.FS to intercept calls to open Javascript files, and instead open their Typescript equivalents and generate the Javascript, commenting out any typescipt parts.
+Package tsserver implements a simple wrapper around fs.FS to intercept calls to open JavaScript files, and instead open their Typescript equivalents and generate the JavaScript, commenting out any Typescript parts.
 
 ## Highlights
 
  - Wrap any `fs.FS` implementation.
- - Automatically transpiles Typescript files to Javascript.
+ - Automatically transpiles Typescript files to JavaScript.
  - Customisable error output.
 
 ## Usage
