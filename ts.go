@@ -29,6 +29,14 @@ type wrapped struct {
 // If a .ts file does not exists, fails to be converted to JavaScript, or if the
 // file being opened is not a .js file then the file open will not be
 // intercepted.
+//
+// Deprecated Typescript constructs, such as namespaces and enums are not
+// transpiled and will result in a parsing error.
+//
+// Due to limitation of transpiling a single file at a time, imported types
+// must be annotated as type imports, either using the `import type` statement,
+// or by prefixing the import identified with the `type` keyword. Anything else
+// may result in invalid import errors.
 func WrapFS(f fs.FS) fs.FS {
 	return &wrapped{FS: f}
 }
