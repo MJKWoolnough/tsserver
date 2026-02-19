@@ -1,6 +1,6 @@
 // Package tsserver implements a simple wrapper around fs.FS to intercept calls
-// to open Javascript files, and instead open their Typescript equivalents and
-// generate the Javascript.
+// to open JavaScript files, and instead open their Typescript equivalents and
+// generate the JavaScript.
 package tsserver // import "vimagination.zapto.org/tsserver"
 
 import (
@@ -26,7 +26,7 @@ type wrapped struct {
 // WrapFS takes a fs.FS and intercepts any calls to open .js files, and instead
 // generates a file from a similarly named .ts file, if one exists.
 //
-// If a .ts file does not exists, fails to be converted to javascript, or if the
+// If a .ts file does not exists, fails to be converted to JavaScript, or if the
 // file being opened is not a .js file then the file open will not be
 // intercepted.
 func WrapFS(f fs.FS) fs.FS {
