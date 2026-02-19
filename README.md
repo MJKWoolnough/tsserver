@@ -12,7 +12,7 @@ Package tsserver implements a simple wrapper around fs.FS to intercept calls to 
 ## Highlights
 
  - Wrap any `fs.FS` implementation.
- - Automatically transpiles Typescript files to JavaScript.
+ - Automatically transpiles Typescript files to JavaScript. NB: Deprecated structure (e.g. namespaces, enums) will cause parsing errors, and unannotated type imports may cause import errors.
  - Customisable error output.
 
 ## Usage
