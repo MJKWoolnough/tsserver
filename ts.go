@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"strings"
+	"text/template"
 
 	"vimagination.zapto.org/javascript"
 	"vimagination.zapto.org/parser"
@@ -22,6 +23,7 @@ const (
 type wrapped struct {
 	fs.FS
 	errFn func(w io.Writer, err error)
+	jsx   *template.Template
 }
 
 // WrapFS takes a fs.FS and intercepts any calls to open .js files, and instead
