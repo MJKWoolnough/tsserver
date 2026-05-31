@@ -38,8 +38,14 @@ type wrapped struct {
 // must be annotated as type imports, either using the `import type` statement,
 // or by prefixing the import identified with the `type` keyword. Anything else
 // may result in invalid import errors.
-func WrapFS(f fs.FS) fs.FS {
-	return &wrapped{FS: f}
+func WrapFS(f fs.FS, opts ...Option) fs.FS {
+	wr := &wrapped{FS: f}
+
+	for _, opt := range opts {
+		opt(wr)
+	}
+
+	return wr
 }
 
 // WrapFSWithErrorHandler acts like WrapFS but allows for custom error handling
