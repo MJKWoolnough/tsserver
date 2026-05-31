@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"path"
 	"testing"
+	"text/template"
 	"time"
 )
 
@@ -23,9 +25,22 @@ func (fileInfo) IsDir() bool { return false }
 
 func (fileInfo) Sys() any { return nil }
 
-type pseudoFS string
+type pseudoFS [3]string
 
-func (p pseudoFS) Open(name string) (fs.File, error) {
+func (pf pseudoFS) Open(name string) (fs.File, error) {
+	p := pf[0]
+
+	switch path.Ext(name) {
+	case jsxExt:
+		p = pf[1]
+	case tsxExt:
+		p = pf[2]
+	}
+
+	if p == "" {
+		return nil, fs.ErrNotExist
+	}
+
 	return &file{
 		Reader:   bytes.NewReader([]byte(p)),
 		name:     name,
@@ -38,23 +53,57 @@ func errFn(w io.Writer, err error) {
 }
 
 func TestWrap(t *testing.T) {
+	jsx := template.Must(template.New("").Parse("import {createElement} from '@dom'; createElement('TAG_NAME', PARAMS, CHILDREN)"))
 	for n, test := range [...]struct {
-		Input, Output string
+		Input  pseudoFS
+		Output string
+		HasJSX bool
 	}{
 		{
-			"",
-			"",
+			pseudoFS{"a", "", ""},
+			"a",
+			false,
 		},
 		{
-			"const a: number = 1;\n\nconsole.log(a);",
+			pseudoFS{"const a: number = 1;\n\nconsole.log(a);", "", ""},
 			"const a/*: number*/ = 1;\n\nconsole.log(a);",
+			false,
 		},
 		{
-			"const a: = 2;",
+			pseudoFS{"const a: = 2;", "", ""},
 			"console.log(\"ModuleItem: error at position 1 (1:1):\\nStatementListItem: error at position 1 (1:1):\\nDeclaration: error at position 1 (1:1):\\nLexicalDeclaration: error at position 8 (1:8):\\ninvalid lexical declaration\")",
+			false,
+		},
+		{
+			pseudoFS{"const a = 123", "const a = <div />", ""},
+			"const a = 123",
+			false,
+		},
+		{
+			pseudoFS{"const a = 123", "const a = <div />", ""},
+			"import{createElement}from\"@dom\"\nconst a = (createElement(\"div\", {}, []))",
+			true,
+		},
+		{
+			pseudoFS{"const a = 123", "const a = <div />", "const b = <div />"},
+			"import{createElement}from\"@dom\"\nconst b = (createElement(\"div\", {}, []))",
+			true,
+		},
+		{
+			pseudoFS{"const a = 123", "const a = <div />", "const b = <div />"},
+			"const a = 123",
+			false,
 		},
 	} {
-		f, err := WrapFSWithErrorHandler(pseudoFS(test.Input), errFn).Open("a.js")
+		opts := make([]Option, 1, 2)
+
+		opts[0] = ErrFn(errFn)
+
+		if test.HasJSX {
+			opts = append(opts, JSX(jsx))
+		}
+
+		f, err := WrapFS(test.Input, opts...).Open("a.js")
 		if err != nil {
 			t.Errorf("test %d: unexpected error while getting file: %s", n+1, err)
 		} else if b, _ := io.ReadAll(f); string(b) != test.Output {
