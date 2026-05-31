@@ -58,7 +58,7 @@ func WrapFS(f fs.FS, opts ...Option) fs.FS {
 //
 // Any data written to the writer will supplied to the client.
 func WrapFSWithErrorHandler(f fs.FS, errFn func(w io.Writer, err error)) fs.FS {
-	return &wrapped{FS: f, errFn: errFn}
+	return WrapFS(f, ErrFn(errFn))
 }
 
 func (w *wrapped) Open(name string) (fs.File, error) {
