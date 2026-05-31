@@ -5,6 +5,7 @@ package tsserver // import "vimagination.zapto.org/tsserver"
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/fs"
 	"strings"
@@ -50,52 +51,27 @@ func WrapFSWithErrorHandler(f fs.FS, errFn func(w io.Writer, err error)) fs.FS {
 }
 
 func (w *wrapped) Open(name string) (fs.File, error) {
-	if strings.HasSuffix(name, jsExt) {
-		if tsf, err := w.FS.Open(strings.TrimSuffix(name, jsExt) + tsExt); err == nil {
+	if before, ok := strings.CutSuffix(name, jsExt); ok {
+		if tsf, err := w.FS.Open(before + tsExt); err == nil {
 			if stat, err := tsf.Stat(); err == nil {
+				var buf bytes.Buffer
+
 				tk := parser.NewReaderTokeniser(tsf)
 
 				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
 				if err == nil {
-					var buf bytes.Buffer
-
-					inTS := false
-
-					for _, tk := range m.Tokens {
-						if tk.IsTypescript() {
-							if !inTS {
-								inTS = true
-
-								buf.WriteString("/*")
-							}
-
-							buf.WriteString(strings.ReplaceAll(tk.Data, "*/", "* /"))
-
-							continue
-						} else if inTS {
-							buf.WriteString("*/")
-							inTS = false
-						}
-
-						buf.WriteString(tk.Data)
-					}
-
-					return &file{
-						Reader:   bytes.NewReader(buf.Bytes()),
-						name:     name,
-						FileInfo: stat,
-					}, nil
+					fmt.Fprintf(&buf, "%#s", m)
 				} else if w.errFn != nil {
-					var buf bytes.Buffer
-
 					w.errFn(&buf, err)
-
-					return &file{
-						Reader:   bytes.NewReader(buf.Bytes()),
-						name:     name,
-						FileInfo: stat,
-					}, nil
+				} else {
+					return w.FS.Open(name)
 				}
+
+				return &file{
+					Reader:   bytes.NewReader(buf.Bytes()),
+					name:     name,
+					FileInfo: stat,
+				}, nil
 			}
 		}
 	}
