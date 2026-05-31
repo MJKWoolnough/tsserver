@@ -12,12 +12,15 @@ import (
 	"text/template"
 
 	"vimagination.zapto.org/javascript"
+	"vimagination.zapto.org/javascript/jsx"
 	"vimagination.zapto.org/parser"
 )
 
 const (
-	jsExt = ".js"
-	tsExt = ".ts"
+	jsExt  = ".js"
+	tsExt  = ".ts"
+	jsxExt = ".jsx"
+	tsxExt = ".tsx"
 )
 
 type wrapped struct {
@@ -60,31 +63,71 @@ func WrapFSWithErrorHandler(f fs.FS, errFn func(w io.Writer, err error)) fs.FS {
 
 func (w *wrapped) Open(name string) (fs.File, error) {
 	if before, ok := strings.CutSuffix(name, jsExt); ok {
-		if tsf, err := w.FS.Open(before + tsExt); err == nil {
-			if stat, err := tsf.Stat(); err == nil {
-				var buf bytes.Buffer
+		var (
+			buf  *bytes.Buffer
+			stat fs.FileInfo
+		)
 
-				tk := parser.NewReaderTokeniser(tsf)
-
-				m, err := javascript.ParseModule(javascript.AsTypescript(&tk))
-				if err == nil {
-					fmt.Fprintf(&buf, "%#s", m)
-				} else if w.errFn != nil {
-					w.errFn(&buf, err)
-				} else {
-					return w.FS.Open(name)
-				}
-
-				return &file{
-					Reader:   bytes.NewReader(buf.Bytes()),
-					name:     name,
-					FileInfo: stat,
-				}, nil
+		if w.jsx != nil {
+			buf, stat = w.processFile(before+tsxExt, true, true)
+			if buf == nil {
+				buf, stat = w.processFile(before+jsxExt, false, true)
 			}
+		}
+
+		if buf == nil {
+			buf, stat = w.processFile(before+tsExt, true, false)
+		}
+
+		if buf != nil {
+			return &file{
+				Reader:   bytes.NewReader(buf.Bytes()),
+				name:     name,
+				FileInfo: stat,
+			}, nil
 		}
 	}
 
 	return w.FS.Open(name)
+}
+
+func (w *wrapped) processFile(path string, isTS, isJSX bool) (*bytes.Buffer, fs.FileInfo) {
+	f, err := w.FS.Open(path)
+	if err != nil {
+		return nil, nil
+	}
+
+	stat, err := f.Stat()
+	if err != nil {
+		return nil, nil
+	}
+
+	var buf bytes.Buffer
+
+	t := parser.NewReaderTokeniser(f)
+
+	var tk javascript.Tokeniser = &t
+
+	if isTS {
+		tk = javascript.AsTypescript(tk)
+	}
+
+	if isJSX {
+		tk = javascript.AsJSX(tk)
+	}
+
+	m, err := javascript.ParseModule(tk)
+	if err == nil && isJSX {
+		err = jsx.Process(m, w.jsx)
+	}
+
+	if err == nil {
+		fmt.Fprintf(&buf, "%#s", m)
+	} else if w.errFn != nil {
+		w.errFn(&buf, err)
+	}
+
+	return &buf, stat
 }
 
 type file struct {
