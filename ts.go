@@ -56,7 +56,9 @@ func WrapFS(f fs.FS, opts ...Option) fs.FS {
 // WrapFSWithErrorHandler acts like WrapFS but allows for custom error handling
 // via the supplied callback function.
 //
-// Any data written to the writer will supplied to the client.
+// Any data written to the writer will be supplied to the client.
+//
+// Deprecated: Use WrapFS with ErrFn Option instead.
 func WrapFSWithErrorHandler(f fs.FS, errFn func(w io.Writer, err error)) fs.FS {
 	return WrapFS(f, ErrFn(errFn))
 }
