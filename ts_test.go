@@ -25,16 +25,18 @@ func (fileInfo) IsDir() bool { return false }
 
 func (fileInfo) Sys() any { return nil }
 
-type pseudoFS [3]string
+type pseudoFS [4]string
 
 func (pf pseudoFS) Open(name string) (fs.File, error) {
 	p := pf[0]
 
 	switch path.Ext(name) {
-	case jsxExt:
+	case tsExt:
 		p = pf[1]
-	case tsxExt:
+	case jsxExt:
 		p = pf[2]
+	case tsxExt:
+		p = pf[3]
 	}
 
 	if p == "" {
@@ -60,37 +62,37 @@ func TestWrap(t *testing.T) {
 		HasJSX bool
 	}{
 		{ // 1
-			pseudoFS{"a", "", ""},
+			pseudoFS{"a", "", "", ""},
 			"a",
 			false,
 		},
 		{ // 2
-			pseudoFS{"const a: number = 1;\n\nconsole.log(a);", "", ""},
+			pseudoFS{"", "const a: number = 1;\n\nconsole.log(a);", "", ""},
 			"const a/*: number*/ = 1;\n\nconsole.log(a);",
 			false,
 		},
 		{ // 3
-			pseudoFS{"const a: = 2;", "", ""},
+			pseudoFS{"", "const a: = 2;", "", ""},
 			"console.log(\"ModuleItem: error at position 1 (1:1):\\nStatementListItem: error at position 1 (1:1):\\nDeclaration: error at position 1 (1:1):\\nLexicalDeclaration: error at position 8 (1:8):\\ninvalid lexical declaration\")",
 			false,
 		},
 		{ // 4
-			pseudoFS{"const a = 123", "const a = <div />", ""},
+			pseudoFS{"", "const a = 123", "const a = <div />", ""},
 			"const a = 123",
 			false,
 		},
 		{ // 5
-			pseudoFS{"const a = 123", "const a = <div />", ""},
+			pseudoFS{"", "const a = 123", "const a = <div />", ""},
 			"import{createElement}from\"@dom\"\nconst a = (createElement(\"div\", {}, []))",
 			true,
 		},
 		{ // 6
-			pseudoFS{"const a = 123", "const a = <div />", "const b = <div />"},
+			pseudoFS{"", "const a = 123", "const a = <div />", "const b = <div />"},
 			"import{createElement}from\"@dom\"\nconst b = (createElement(\"div\", {}, []))",
 			true,
 		},
 		{ // 7
-			pseudoFS{"const a = 123", "const a = <div />", "const b = <div />"},
+			pseudoFS{"", "const a = 123", "const a = <div />", "const b = <div />"},
 			"const a = 123",
 			false,
 		},
